@@ -110,7 +110,7 @@ class KCSubSwitcher(
     private fun switch(region: Region): Boolean {
         val number = SHIP_REGIONS.indexOf(region) + 1
         println("Switching ship $number!")
-        region.clickRandomly("nav/fleetcomp_ship_switch_button.png")
+        region.subRegion(245, 66, 78, 33).clickRandomly()
         SHIP_LIST_REGION.wait("nav/fleetcomp_shiplist_sort_arrow.png")
 
         println("Checking shiplist sort order and moving to first page if necessary!")

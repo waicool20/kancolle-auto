@@ -140,6 +140,14 @@ fun Region.clickRandomly(image: Image, usePreviousMatch: Boolean = false) {
     }
 }
 
+fun Region.clickRandomly(times: Int = 1) {
+    val RNG = Random()
+    repeat(times) {
+        click(Location(x + RNG.nextInt(w), y + RNG.nextInt(h)))
+        TimeUnit.MILLISECONDS.sleep(100)
+    }
+}
+
 
 /**
  * Random rest after clicking generator
@@ -212,6 +220,10 @@ fun Region.findMinimumSimilarity(image: Image, min: Double = 0.0, max: Double = 
     }
     return -1.0
 }
+
+/**
+ * Random hover function
+ */
 
 fun Region.hoverRandomly(times: Int = 1) {
     val RNG = Random()
