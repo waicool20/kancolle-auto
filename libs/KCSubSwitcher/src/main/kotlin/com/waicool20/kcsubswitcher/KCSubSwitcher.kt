@@ -52,7 +52,6 @@ class KCSubSwitcher(
         Settings.MinSimilarity = 0.8
         kcRegion.autoWaitTimeout = 1.0
         ImagePath.add(javaClass.classLoader.getResource("images"))
-        fleetSubsRegions.addAll(SHIP_REGIONS)
     }
 
     fun switchSubs(): Boolean {
@@ -119,9 +118,7 @@ class KCSubSwitcher(
         SHIP_LIST_REGION.wait("nav/fleetcomp_shiplist_sort_arrow.png")
 
         logger.info("Checking shiplist sort order and moving to first page if necessary!")
-        while (SHIP_LIST_REGION.doesntHave("nav/fleetcomp_shiplist_sort_type.png")) {
-            SHIP_LIST_REGION.clickAndRest("nav/fleetcomp_shiplist_sort_arrow.png")
-        }
+        SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_sort_arrow.png").untilThisAppears("nav/fleetcomp_shiplist_sort_type.png")
         kcRegion.hoverRandomly()
         val startingPage = findStartingPage()
         if (startingPage < 0) return false

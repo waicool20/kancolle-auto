@@ -18,6 +18,16 @@ fun Region.subRegion(x: xCoord, y: yCoord, width: Width, height: Height): Region
     return Region(xCoord, yCoord, newWidth, newHeight)
 }
 
+enum class Quadrant {
+    TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
+}
+
+fun Region.getQuadrant(quadrant: Quadrant) = when (quadrant) {
+    Quadrant.TOP_LEFT -> subRegion(0, 0, w / 2, h / 2)
+    Quadrant.TOP_RIGHT -> subRegion(w / 2, 0, w / 2, h / 2)
+    Quadrant.BOTTOM_LEFT -> subRegion(0, h / 2, w / 2, h / 2)
+    Quadrant.BOTTOM_RIGHT -> subRegion(w / 2, h / 2, w / 2, h / 2)
+}
 
 /**
  * Find something in a region or return null instead of raising an Exception
@@ -43,22 +53,18 @@ fun <PSI> Region.findAllOrEmpty(psi: PSI): List<Match> {
  * Region exist utils
  */
 
-fun <PSI> Region.has(psi: PSI, similarity: Double = Settings.MinSimilarity): Boolean {
-    return when (psi) {
-        is String -> exists(Pattern(psi).similar(similarity.toFloat())) != null
-        is Pattern -> exists(Pattern(psi).similar(similarity.toFloat())) != null
-        is Image -> exists(Pattern(psi).similar(similarity.toFloat())) != null
-        else -> throw IllegalArgumentException()
-    }
+fun <PSI> Region.has(psi: PSI, similarity: Double = Settings.MinSimilarity) = when (psi) {
+    is String -> exists(Pattern(psi).similar(similarity.toFloat())) != null
+    is Pattern -> exists(Pattern(psi).similar(similarity.toFloat())) != null
+    is Image -> exists(Pattern(psi).similar(similarity.toFloat())) != null
+    else -> throw IllegalArgumentException()
 }
 
-fun <PSI> Region.has(images: Set<PSI>, similarity: Double = Settings.MinSimilarity): Boolean {
-    when {
-        images.first() is String -> if (images.parallelMap({ has(it, similarity) }).filter { it }.count() > 0) return true
-        images.first() is Pattern -> if (images.parallelMap({ has(it, similarity) }).filter { it }.count() > 0) return true
-        images.first() is Image -> if (images.parallelMap({ has(it, similarity) }).filter { it }.count() > 0) return true
-    }
-    return false
+fun <PSI> Region.has(images: Set<PSI>, similarity: Double = Settings.MinSimilarity) = when(images.firstOrNull()) {
+    is String -> images.parallelMap({ has(it, similarity) }).contains(true)
+    is Pattern -> images.parallelMap({ has(it, similarity) }).contains(true)
+    is Image -> images.parallelMap({ has(it, similarity) }).contains(true)
+    else -> false
 }
 
 /**
@@ -117,6 +123,26 @@ fun <PSI> Region.clickAndRest(psi: PSI,
 fun <PSI> Region.checkAndClick(psi: PSI, minMillis: Long = 200, maxMillis: Long = 500) {
     if (has(psi)) clickAndRest(psi, minMillis, maxMillis, true)
 }
+
+/**
+ * Utility class to make common clicking actions more readable
+ */
+class Clicker<out PSI>(val region: Region, val source: PSI) {
+
+    fun <PSI2> untilThisDisappears(target: PSI2) {
+        while (region.has(target)) region.clickAndRest(source)
+    }
+
+    fun <PSI2> untilThisAppears(target: PSI2) {
+        while (region.doesntHave(target)) region.clickAndRest(source)
+    }
+}
+
+/**
+ * Function that keeps on clicking source untilThisAppears target is seen
+ */
+
+fun <PSI> Region.clickOn(source: PSI) = Clicker(this, source)
 
 /**
  * Find minimum similarity for something to have match, it will sweep from max to min
