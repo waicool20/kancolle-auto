@@ -17,48 +17,16 @@ fun Region.subRegion(x: xCoord, y: yCoord, width: Width, height: Height) =
  * Find something in a region or return null instead of raising an Exception
  */
 
-fun Region.findOrNull(image: String) = try {
-    find(image)
+fun <PSI> Region.findOrNull(psi: PSI) = try {
+    find(psi)
 } catch (e: FindFailed) {
     null
 }
 
-fun Region.findOrNull(pattern: Pattern) = try {
-    find(pattern)
-} catch (e: FindFailed) {
-    null
-}
-
-fun Region.findOrNull(image: Image) = try {
-    find(image)
-} catch (e: FindFailed) {
-    null
-}
-
-fun Region.findAllOrEmpty(image: String): List<Match> {
+fun <PSI> Region.findAllOrEmpty(psi: PSI): List<Match> {
     val matches = mutableListOf<Match>()
     try {
-        findAll(image)?.forEachRemaining { matches.add(it) }
-    } catch (e: FindFailed) {
-        Unit // Ignore
-    }
-    return matches
-}
-
-fun Region.findAllOrEmpty(pattern: Pattern): List<Match> {
-    val matches = mutableListOf<Match>()
-    try {
-        findAll(pattern)?.forEachRemaining { matches.add(it) }
-    } catch (e: FindFailed) {
-        Unit // Ignore
-    }
-    return matches
-}
-
-fun Region.findAllOrEmpty(image: Image): List<Match> {
-    val matches = mutableListOf<Match>()
-    try {
-        findAll(image)?.forEachRemaining { matches.add(it) }
+        findAll(psi)?.forEachRemaining { matches.add(it) }
     } catch (e: FindFailed) {
         Unit // Ignore
     }
@@ -69,20 +37,20 @@ fun Region.findAllOrEmpty(image: Image): List<Match> {
  * Region exist utils
  */
 
-fun Region.has(image: String, similarity: Double = Settings.MinSimilarity) =
-        exists(Pattern(image).similar(similarity.toFloat())) != null
+fun <PSI> Region.has(psi: PSI, similarity: Double = Settings.MinSimilarity): Boolean {
+    return when (psi) {
+        is String -> exists(Pattern(psi).similar(similarity.toFloat())) != null
+        is Pattern -> exists(Pattern(psi).similar(similarity.toFloat())) != null
+        is Image -> exists(Pattern(psi).similar(similarity.toFloat())) != null
+        else -> throw IllegalArgumentException()
+    }
+}
 
-fun Region.has(pattern: Pattern, similarity: Double = Settings.MinSimilarity) =
-        exists(Pattern(pattern).similar(similarity.toFloat())) != null
-
-fun Region.has(image: Image, similarity: Double = Settings.MinSimilarity) =
-        exists(Pattern(image).similar(similarity.toFloat())) != null
-
-inline fun <reified T> Region.has(images: Set<T>, similarity: Double = Settings.MinSimilarity): Boolean {
+fun <PSI> Region.has(images: Set<PSI>, similarity: Double = Settings.MinSimilarity): Boolean {
     when {
-        images.first() is String -> if (images.parallelMap({ has(it as String, similarity) }).filter { it }.count() > 0) return true
-        images.first() is Pattern -> if (images.parallelMap({ has(it as Pattern, similarity) }).filter { it }.count() > 0) return true
-        images.first() is Image -> if (images.parallelMap({ has(it as Image, similarity) }).filter { it }.count() > 0) return true
+        images.first() is String -> if (images.parallelMap({ has(it, similarity) }).filter { it }.count() > 0) return true
+        images.first() is Pattern -> if (images.parallelMap({ has(it, similarity) }).filter { it }.count() > 0) return true
+        images.first() is Image -> if (images.parallelMap({ has(it, similarity) }).filter { it }.count() > 0) return true
     }
     return false
 }
@@ -91,16 +59,10 @@ inline fun <reified T> Region.has(images: Set<T>, similarity: Double = Settings.
  * Inverse of region exists utils
  */
 
-fun Region.doesntHave(image: String, similarity: Double = Settings.MinSimilarity) =
-        !has(image, similarity)
+fun <PSI> Region.doesntHave(psi: PSI, similarity: Double = Settings.MinSimilarity) =
+        !has(psi, similarity)
 
-fun Region.doesntHave(pattern: Pattern, similarity: Double = Settings.MinSimilarity) =
-        !has(pattern, similarity)
-
-fun Region.doesntHave(image: Image, similarity: Double = Settings.MinSimilarity) =
-        !has(image, similarity)
-
-inline fun <reified T> Region.doesntHave(images: Set<T>, similarity: Double = Settings.MinSimilarity): Boolean =
+fun <PSI> Region.doesntHave(images: Set<PSI>, similarity: Double = Settings.MinSimilarity): Boolean =
         !has(images, similarity)
 
 
@@ -116,25 +78,9 @@ fun Match.clickRandomly() {
     click()
 }
 
-fun Region.clickRandomly(image: String, usePreviousMatch: Boolean = false) {
+fun <PSI> Region.clickRandomly(psi: PSI, usePreviousMatch: Boolean = false) {
     try {
-        (if (usePreviousMatch) lastMatch else findOrNull(image))?.let(Match::clickRandomly)
-    } catch (e: FindFailed) {
-        e.printStackTrace()
-    }
-}
-
-fun Region.clickRandomly(pattern: Pattern, usePreviousMatch: Boolean = false) {
-    try {
-        (if (usePreviousMatch) lastMatch else findOrNull(pattern))?.let(Match::clickRandomly)
-    } catch (e: FindFailed) {
-        e.printStackTrace()
-    }
-}
-
-fun Region.clickRandomly(image: Image, usePreviousMatch: Boolean = false) {
-    try {
-        (if (usePreviousMatch) lastMatch else findOrNull(image))?.let(Match::clickRandomly)
+        (if (usePreviousMatch) lastMatch else findOrNull(psi))?.let(Match::clickRandomly)
     } catch (e: FindFailed) {
         e.printStackTrace()
     }
@@ -148,74 +94,32 @@ fun Region.clickRandomly(times: Int = 1) {
     }
 }
 
-
 /**
  * Random rest after clicking generator
  */
-fun Region.clickAndRest(image: String,
-                        minMillis: Long = 200, maxMillis: Long = 500,
-                        usePreviousMatch: Boolean = false) {
-    clickRandomly(image, usePreviousMatch)
-    TimeUnit.MILLISECONDS.sleep(Random().nextLong(minMillis, maxMillis))
-}
 
-fun Region.clickAndRest(pattern: Pattern,
-                        minMillis: Long = 200, maxMillis: Long = 500,
-                        usePreviousMatch: Boolean = false) {
-    clickRandomly(pattern, usePreviousMatch)
-    TimeUnit.MILLISECONDS.sleep(Random().nextLong(minMillis, maxMillis))
-}
-
-fun Region.clickAndRest(image: Image,
-                        minMillis: Long = 200, maxMillis: Long = 500,
-                        usePreviousMatch: Boolean = false) {
-    clickRandomly(image, usePreviousMatch)
+fun <PSI> Region.clickAndRest(psi: PSI,
+                              minMillis: Long = 200, maxMillis: Long = 500,
+                              usePreviousMatch: Boolean = false) {
+    clickRandomly(psi, usePreviousMatch)
     TimeUnit.MILLISECONDS.sleep(Random().nextLong(minMillis, maxMillis))
 }
 
 /**
  * Check before clicking
  */
-fun Region.checkAndClick(image: String, minMillis: Long = 200, maxMillis: Long = 500) {
-    if (has(image)) clickAndRest(image, minMillis, maxMillis, true)
-}
-
-fun Region.checkAndClick(pattern: Pattern, minMillis: Long = 200, maxMillis: Long = 500) {
-    if (has(pattern)) clickAndRest(pattern, minMillis, maxMillis, true)
-}
-
-fun Region.checkAndClick(image: Image, minMillis: Long = 200, maxMillis: Long = 500) {
-    if (has(image)) clickAndRest(image, minMillis, maxMillis, true)
+fun <PSI> Region.checkAndClick(psi: PSI, minMillis: Long = 200, maxMillis: Long = 500) {
+    if (has(psi)) clickAndRest(psi, minMillis, maxMillis, true)
 }
 
 /**
  * Find minimum similarity for something to have match, it will sweep from max to min
  */
-fun Region.findMinimumSimilarity(image: String, min: Double = 0.0, max: Double = 1.0, steps: Double = 0.05): Double {
+fun <PSI> Region.findMinimumSimilarity(psi: PSI, min: Double = 0.0, max: Double = 1.0, steps: Double = 0.05): Double {
     var similarity = max
     while (similarity >= min) {
-        println("Checking similarity $similarity for $image")
-        if (this.findOrNull(image) != null) return similarity
-        similarity -= steps
-    }
-    return -1.0
-}
-
-fun Region.findMinimumSimilarity(pattern: Pattern, min: Double = 0.0, max: Double = 1.0, steps: Double = 0.05): Double {
-    var similarity = max
-    while (similarity >= min) {
-        println("Checking similarity $similarity for $pattern")
-        if (findOrNull(pattern) != null) return similarity
-        similarity -= steps
-    }
-    return -1.0
-}
-
-fun Region.findMinimumSimilarity(image: Image, min: Double = 0.0, max: Double = 1.0, steps: Double = 0.05): Double {
-    var similarity = max
-    while (similarity >= min) {
-        println("Checking similarity $similarity for $image")
-        if (this.findOrNull(image) != null) return similarity
+        println("Checking similarity $similarity for $psi")
+        if (this.findOrNull(psi) != null) return similarity
         similarity -= steps
     }
     return -1.0
