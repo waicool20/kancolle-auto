@@ -48,6 +48,7 @@ class KCSubSwitcher(
         Settings.MinSimilarity = 0.8
         kcRegion.autoWaitTimeout = 1.0
         ImagePath.add(javaClass.classLoader.getResource("images"))
+        fleetSubsRegions.addAll(SHIP_REGIONS)
     }
 
     fun switchSubs(): Boolean {
@@ -126,7 +127,6 @@ class KCSubSwitcher(
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
                 val entries = mutableListOf<Match>()
                 ENABLED_SUBMARINES.parallelForEach({ sub ->
-                    println("Scanning for ${sub.subName}")
                     SHIP_LIST_REGION.findAllOrEmpty(sub.pattern(0.95))
                             .let {
                                 if (it.isNotEmpty()) {
