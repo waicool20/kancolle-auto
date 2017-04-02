@@ -1,0 +1,68 @@
+buildscript {
+    ext.kotlin_version = '1.1.1'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.4'
+}
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+group 'com.waicool20'
+version '1.0'
+
+sourceCompatibility = 1.8
+
+defaultTasks 'build'
+build.finalizedBy(tasks.shadowJar)
+jar.enabled = false
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.14'
+
+    compile ('com.sikulix:sikulixapi:1.1.1-SNAPSHOT') {
+        exclude group: 'com.sikulix'
+        exclude module: 'jadb'
+    }
+    compile group: 'com.sikulix', name: 'sikulixlibslux', version: '1.1.1-SNAPSHOT'
+    compile group: 'com.sikulix', name: 'sikulixlibsmac', version: '1.1.1-SNAPSHOT'
+    compile group: 'com.sikulix', name: 'sikulixlibswin', version: '1.1.1-SNAPSHOT'
+
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.8'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+shadowJar {
+    classifier = null
+    version = null
+    dependencies {
+        exclude(dependency('com.sikulix::1.1.1-SNAPSHOT'))
+    }
+}
+
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}

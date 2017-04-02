@@ -5,7 +5,7 @@ from random import randint, choice
 from util import *
 
 import os
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../libs/KCSubSwitcher.jar"))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../libs/KCSubSwitcher/build/libs/KCSubSwitcher.jar"))
 from com.waicool20.kcsubswitcher import KCSubSwitcher
 
 Settings.OcrTextRead = True
