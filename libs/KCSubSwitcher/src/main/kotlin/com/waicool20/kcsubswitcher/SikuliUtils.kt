@@ -10,8 +10,14 @@ typealias yCoord = Int
 typealias Width = Int
 typealias Height = Int
 
-fun Region.subRegion(x: xCoord, y: yCoord, width: Width, height: Height) =
-        Region(this.x + x, this.y + y, width, height)
+fun Region.subRegion(x: xCoord, y: yCoord, width: Width, height: Height): Region {
+    val xCoord = if (x in 0..w) (this.x + x) else w
+    val yCoord = if (y in 0..h) (this.y + y) else h
+    val newWidth = if (width in 0..w) width else w
+    val newHeight = if (height in 0..w) height else h
+    return Region(xCoord, yCoord, newWidth, newHeight)
+}
+
 
 /**
  * Find something in a region or return null instead of raising an Exception
