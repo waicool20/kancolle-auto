@@ -2,6 +2,7 @@ package com.waicool20.kcsubswitcher
 
 import org.sikuli.basics.Settings
 import org.sikuli.script.*
+import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
@@ -10,6 +11,7 @@ val DMG_SIMILARITY = 0.66
 val FATIGUE_SIMILARITY = 0.96
 
 fun main(args: Array<String>) {
+    val logger = LoggerFactory.getLogger("Main Function")
     // Test Case
     val switcher = KCSubSwitcher(
             Screen().subRegion(80, 81, 800, 480), // Manual coordinates to kc window
@@ -21,7 +23,7 @@ fun main(args: Array<String>) {
     val time = measureTimeMillis {
         switcher.switchSubs()
     }
-    println("Finished executing in $time ms!")
+    logger.info("Finished executing in $time ms!")
 }
 
 class KCSubSwitcher(
@@ -29,6 +31,8 @@ class KCSubSwitcher(
         subs: List<String>,
         damageLevel: Int,
         val fatigueSwitch: Boolean) {
+
+    val logger = LoggerFactory.getLogger(javaClass)
 
     val ENABLED_SUBMARINES = Submarines.parseSubmarineList(subs)
     val DAMAGE_LEVELS = Damage.getForLevel(damageLevel)
@@ -56,65 +60,65 @@ class KCSubSwitcher(
         fillFleetCache()
 
         val regionsToSwitch = mutableSetOf<Region>()
-        println("Checking for ships that need switching!")
+        logger.info("Checking for ships that need switching!")
 
         fleetSubsRegions.parallelForEach({ region ->
             val statusRegion = region.subRegion(161, 10, 164, 44)
             val number = SHIP_REGIONS.indexOf(region) + 1
-            println("Checking Ship $number")
+            logger.info("Checking Ship $number")
             when {
                 statusRegion.has("status/fleetcomp_dmg_repair.png") -> {
-                    println("Ship $number is under repair")
+                    logger.info("Ship $number is under repair")
                     regionsToSwitch.add(region)
                 }
                 statusRegion.has(DAMAGE_LEVELS.map(Damage::image).toSet(), DMG_SIMILARITY) -> {
-                    println("Ship $number is under the damage threshold")
+                    logger.info("Ship $number is under the damage threshold")
                     regionsToSwitch.add(region)
                 }
                 fatigueSwitch && statusRegion.has(Fatigued.values().map(Fatigued::image).toSet(), FATIGUE_SIMILARITY) -> {
-                    println("Ship $number is under the fatigue threshold")
+                    logger.info("Ship $number is under the fatigue threshold")
                     regionsToSwitch.add(region)
                 }
             }
         })
 
-        println("Checking complete! Ships ${regionsToSwitch.map { SHIP_REGIONS.indexOf(it) + 1 }.sorted()} need switching!")
+        logger.info("Checking complete! Ships ${regionsToSwitch.map { SHIP_REGIONS.indexOf(it) + 1 }.sorted()} need switching!")
         if (regionsToSwitch.map { switch(it) }.toSet().contains(false)) {
-            println("Not all subs could be replaced!")
+            logger.info("Not all subs could be replaced!")
             return false
         } else {
-            println("All subs were replaced!")
+            logger.info("All subs were replaced!")
             return true
         }
     }
 
     private fun fillFleetCache() {
         if (fleetSubsRegions.isEmpty()) {
-            println("Current ship cache is empty, scanning for SS and SSVs!")
+            logger.info("Current ship cache is empty, scanning for SS and SSVs!")
             SHIP_REGIONS.parallelForEach({ region ->
                 val number = SHIP_REGIONS.indexOf(region) + 1
                 when {
                     region.has("ship_class_ss.png", similarity = CLASS_SIMILARITY) -> {
                         fleetSubsRegions.add(region)
-                        println("Ship $number is an SS")
+                        logger.info("Ship $number is an SS")
                     }
                     region.has("ship_class_ssv.png", similarity = CLASS_SIMILARITY) -> {
                         fleetSubsRegions.add(region)
-                        println("Ship $number is an SSV")
+                        logger.info("Ship $number is an SSV")
                     }
                 }
             })
-            println("Scan complete! Ships ${fleetSubsRegions.map { SHIP_REGIONS.indexOf(it) + 1 }.sorted()} were found as SS(V)")
+            logger.info("Scan complete! Ships ${fleetSubsRegions.map { SHIP_REGIONS.indexOf(it) + 1 }.sorted()} were found as SS(V)")
         }
     }
 
     private fun switch(region: Region): Boolean {
         val number = SHIP_REGIONS.indexOf(region) + 1
-        println("Switching ship $number!")
+        logger.info("Switching ship $number!")
         region.subRegion(245, 66, 78, 33).clickRandomly()
         SHIP_LIST_REGION.wait("nav/fleetcomp_shiplist_sort_arrow.png")
 
-        println("Checking shiplist sort order and moving to first page if necessary!")
+        logger.info("Checking shiplist sort order and moving to first page if necessary!")
         while (SHIP_LIST_REGION.doesntHave("nav/fleetcomp_shiplist_sort_type.png")) {
             SHIP_LIST_REGION.clickAndRest("nav/fleetcomp_shiplist_sort_arrow.png")
         }
@@ -123,14 +127,14 @@ class KCSubSwitcher(
         if (startingPage < 0) return false
 
         for (pgNumber in startingPage..10) {
-            println("Starting search at page $pgNumber")
+            logger.info("Starting search at page $pgNumber")
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
                 val entries = mutableListOf<Match>()
                 ENABLED_SUBMARINES.parallelForEach({ sub ->
                     SHIP_LIST_REGION.findAllOrEmpty(sub.pattern(0.95))
                             .let {
                                 if (it.isNotEmpty()) {
-                                    println("Found ${it.size} ${sub.subName} that should be checked")
+                                    logger.info("Found ${it.size} ${sub.subName} that should be checked")
                                     entries.addAll(it)
                                 }
                             }
@@ -141,29 +145,29 @@ class KCSubSwitcher(
                     when {
                         SHIP_LIST_REGION.subRegion(278, 325, 125, 45)
                                 .doesntHave(Pattern("nav/fleetcomp_shiplist_ship_switch_button.png").exact()) -> {
-                            println("Can't switch with this sub type!")
+                            logger.info("Can't switch with this sub type!")
                             SHIP_LIST_REGION.checkAndClick("nav/fleetcomp_shiplist_pg1.png")
                         }
                         SHIP_LIST_REGION.subRegion(264, 62, 160, 40).let {
                             it.doesntHave(Damage.UNDER_REPAIR.pattern(DMG_SIMILARITY)) &&
                             it.doesntHave(DAMAGE_LEVELS.map { it.pattern(DMG_SIMILARITY) }.toSet())
                         } -> {
-                            println("Found a free submarine! Swapping it in")
+                            logger.info("Found a free submarine! Swapping it in")
                             SHIP_LIST_REGION.checkAndClick("nav/fleetcomp_shiplist_ship_switch_button.png")
                             TimeUnit.SECONDS.sleep(1)
                             return true
                         }
                         else -> {
-                            println("Submarine not available, moving on!")
+                            logger.info("Submarine not available, moving on!")
                             SHIP_LIST_REGION.checkAndClick("nav/fleetcomp_shiplist_pg1.png")
                         }
                     }
                 }
             } else {
-                println("No more available subs, couldn't replace ship $number")
+                logger.info("No more available subs, couldn't replace ship $number")
                 return false
             }
-            println("Couldn't find any subs on this page, switching to page ${pgNumber + 1}")
+            logger.info("Couldn't find any subs on this page, switching to page ${pgNumber + 1}")
             SHIP_LIST_REGION.clickAndRest("nav/fleetcomp_shiplist_pg${pgNumber + 1}.png")
         }
         return false
@@ -175,7 +179,7 @@ class KCSubSwitcher(
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
                 return pgNumber
             } else {
-                println("Did not find any subs in any pages")
+                logger.info("Did not find any subs in any pages")
                 return -1
             }
         }
