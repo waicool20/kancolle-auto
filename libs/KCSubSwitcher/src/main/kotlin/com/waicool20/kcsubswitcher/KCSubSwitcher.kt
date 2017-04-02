@@ -114,7 +114,7 @@ class KCSubSwitcher(
     private fun switch(region: Region): Boolean {
         val number = SHIP_REGIONS.indexOf(region) + 1
         logger.info("Switching ship $number!")
-        region.subRegion(245, 66, 78, 33).clickRandomly()
+        region.subRegion(245, 66, 78, 33).clickItself().normally()
         SHIP_LIST_REGION.wait("nav/fleetcomp_shiplist_sort_arrow.png")
 
         logger.info("Checking shiplist sort order and moving to first page if necessary!")
@@ -137,26 +137,26 @@ class KCSubSwitcher(
                             }
                 })
                 for (entry in entries) {
-                    entry.clickRandomly()
+                    entry.clickItself().normally()
                     TimeUnit.SECONDS.sleep(1)
                     when {
                         SHIP_LIST_REGION.subRegion(278, 325, 125, 45)
                                 .doesntHave(Pattern("nav/fleetcomp_shiplist_ship_switch_button.png").exact()) -> {
                             logger.info("Can't switch with this sub type!")
-                            SHIP_LIST_REGION.checkAndClick("nav/fleetcomp_shiplist_pg1.png")
+                            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg1.png").ifItExists()
                         }
                         SHIP_LIST_REGION.subRegion(264, 62, 160, 40).let {
                             it.doesntHave(Damage.UNDER_REPAIR.pattern(DMG_SIMILARITY)) &&
                             it.doesntHave(DAMAGE_LEVELS.map { it.pattern(DMG_SIMILARITY) }.toSet())
                         } -> {
                             logger.info("Found a free submarine! Swapping it in")
-                            SHIP_LIST_REGION.checkAndClick("nav/fleetcomp_shiplist_ship_switch_button.png")
+                            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_ship_switch_button.png").ifItExists()
                             TimeUnit.SECONDS.sleep(1)
                             return true
                         }
                         else -> {
                             logger.info("Submarine not available, moving on!")
-                            SHIP_LIST_REGION.checkAndClick("nav/fleetcomp_shiplist_pg1.png")
+                            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg1.png").ifItExists()
                         }
                     }
                 }
@@ -165,14 +165,14 @@ class KCSubSwitcher(
                 return false
             }
             logger.info("Couldn't find any subs on this page, switching to page ${pgNumber + 1}")
-            SHIP_LIST_REGION.clickAndRest("nav/fleetcomp_shiplist_pg${pgNumber + 1}.png")
+            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg${pgNumber + 1}.png").normally()
         }
         return false
     }
 
     private fun findStartingPage(): Int {
         for (pgNumber in 1..11) {
-            SHIP_LIST_REGION.clickAndRest("nav/fleetcomp_shiplist_pg$pgNumber.png")
+            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg$pgNumber.png").normally()
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
                 return pgNumber
             } else {

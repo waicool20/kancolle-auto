@@ -60,7 +60,7 @@ fun <PSI> Region.has(psi: PSI, similarity: Double = Settings.MinSimilarity) = wh
     else -> throw IllegalArgumentException()
 }
 
-fun <PSI> Region.has(images: Set<PSI>, similarity: Double = Settings.MinSimilarity) = when(images.firstOrNull()) {
+fun <PSI> Region.has(images: Set<PSI>, similarity: Double = Settings.MinSimilarity) = when (images.firstOrNull()) {
     is String -> images.parallelMap({ has(it, similarity) }).contains(true)
     is Pattern -> images.parallelMap({ has(it, similarity) }).contains(true)
     is Image -> images.parallelMap({ has(it, similarity) }).contains(true)
@@ -77,72 +77,62 @@ fun <PSI> Region.doesntHave(psi: PSI, similarity: Double = Settings.MinSimilarit
 fun <PSI> Region.doesntHave(images: Set<PSI>, similarity: Double = Settings.MinSimilarity): Boolean =
         !has(images, similarity)
 
-
-/**
- * Random click generator
- */
-
-fun Match.clickRandomly() {
-    val RNG = Random()
-    val dx = RNG.nextInt(w / 2) * RNG.nextSign()
-    val dy = RNG.nextInt(h / 2) * RNG.nextSign()
-    Pattern(image).targetOffset(dx, dy)
-    click()
-}
-
-fun <PSI> Region.clickRandomly(psi: PSI, usePreviousMatch: Boolean = false) {
-    try {
-        (if (usePreviousMatch) lastMatch else findOrNull(psi))?.let(Match::clickRandomly)
-    } catch (e: FindFailed) {
-        e.printStackTrace()
-    }
-}
-
-fun Region.clickRandomly(times: Int = 1) {
-    val RNG = Random()
-    repeat(times) {
-        click(Location(x + RNG.nextInt(w), y + RNG.nextInt(h)))
-        TimeUnit.MILLISECONDS.sleep(100)
-    }
-}
-
-/**
- * Random rest after clicking generator
- */
-
-fun <PSI> Region.clickAndRest(psi: PSI,
-                              minMillis: Long = 200, maxMillis: Long = 500,
-                              usePreviousMatch: Boolean = false) {
-    clickRandomly(psi, usePreviousMatch)
-    TimeUnit.MILLISECONDS.sleep(Random().nextLong(minMillis, maxMillis))
-}
-
-/**
- * Check before clicking
- */
-fun <PSI> Region.checkAndClick(psi: PSI, minMillis: Long = 200, maxMillis: Long = 500) {
-    if (has(psi)) clickAndRest(psi, minMillis, maxMillis, true)
-}
-
 /**
  * Utility class to make common clicking actions more readable
  */
-class Clicker<out PSI>(val region: Region, val source: PSI) {
+class Clicker<out PSI>(val region: Region, val target: PSI) {
 
-    fun <PSI2> untilThisDisappears(target: PSI2) {
-        while (region.has(target)) region.clickAndRest(source)
+    fun <PSI2> untilThisDisappears(psi2: PSI2) {
+        while (region.has(psi2)) normally()
     }
 
-    fun <PSI2> untilThisAppears(target: PSI2) {
-        while (region.doesntHave(target)) region.clickAndRest(source)
+    fun <PSI2> untilThisAppears(psi2: PSI2) {
+        while (region.doesntHave(psi2)) normally()
+    }
+
+    fun normally(times: Int = 1,
+                 minMillis: Long = 200, maxMillis: Long = 500,
+                 usePreviousMatch: Boolean = false) {
+        randomly(times, usePreviousMatch)
+        TimeUnit.MILLISECONDS.sleep(Random().nextLong(minMillis, maxMillis))
+    }
+
+    fun ifItExists() {
+        if (target !is Region && region.has(target)) normally()
+    }
+
+    private fun randomly(times: Int = 1, usePreviousMatch: Boolean = false) {
+        val RNG = Random()
+        if (target is Region) {
+            repeat(times) {
+                val xCoord = target.x + RNG.nextInt(target.w)
+                val yCoord = target.y + RNG.nextInt(target.h)
+                target.click(Location(xCoord, yCoord))
+                TimeUnit.MILLISECONDS.sleep(100)
+            }
+        } else {
+            val match = if (usePreviousMatch) region.lastMatch else region.findOrNull(target)
+            repeat(times) {
+                if (match != null) {
+                    with(match) {
+                        val dx = RNG.nextInt(w / 2) * RNG.nextSign()
+                        val dy = RNG.nextInt(h / 2) * RNG.nextSign()
+                        Pattern(image).targetOffset(dx, dy)
+                        click()
+                    }
+                }
+            }
+        }
     }
 }
 
 /**
- * Function that keeps on clicking source untilThisAppears target is seen
+ * Function that keeps on clicking target untilThisAppears target is seen
  */
 
 fun <PSI> Region.clickOn(source: PSI) = Clicker(this, source)
+
+fun Region.clickItself() = Clicker(this, this)
 
 /**
  * Find minimum similarity for something to have match, it will sweep from max to min
