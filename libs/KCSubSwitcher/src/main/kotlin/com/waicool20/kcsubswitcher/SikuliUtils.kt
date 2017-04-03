@@ -82,30 +82,41 @@ fun <PSI> Region.doesntHave(images: Set<PSI>, similarity: Double = Settings.MinS
  * Waiting utilities
  */
 
-fun <PSI> Region.waitUntilThisAppears(psi: PSI,
-                                      similarity: Double = Settings.MinSimilarity,
-                                      timeout: Double = Settings.FOREVER.toDouble()) = when (psi) {
-    is String -> wait(Pattern(psi).similar(similarity.toFloat()), timeout)
-    is Pattern -> wait(Pattern(psi).similar(similarity.toFloat()), timeout)
-    is Image -> wait(Pattern(psi).similar(similarity.toFloat()), timeout)
-    else -> throw IllegalArgumentException()
+class Waiter<out PSI>(val region: Region, val waitTarget: PSI) {
+
+    fun toAppear(similarity: Double = Settings.MinSimilarity,
+                 timeout: Double = Settings.FOREVER.toDouble()) = try {
+        with(region) {
+            when (waitTarget) {
+                is String -> wait(Pattern(waitTarget).similar(similarity.toFloat()), timeout)
+                is Pattern -> wait(Pattern(waitTarget).similar(similarity.toFloat()), timeout)
+                is Image -> wait(Pattern(waitTarget).similar(similarity.toFloat()), timeout)
+                else -> throw IllegalArgumentException()
+            }
+        }
+    } catch (e: FindFailed) {
+        null
+    }
+
+    fun toVanish(similarity: Double = Settings.MinSimilarity,
+                 timeout: Double = Settings.FOREVER.toDouble()) = with(region) {
+        when (waitTarget) {
+            is String -> waitVanish(Pattern(waitTarget).similar(similarity.toFloat()), timeout)
+            is Pattern -> waitVanish(Pattern(waitTarget).similar(similarity.toFloat()), timeout)
+            is Image -> waitVanish(Pattern(waitTarget).similar(similarity.toFloat()), timeout)
+            else -> throw IllegalArgumentException()
+        }
+    }
 }
 
-fun <PSI> Region.waitUntilThisDissappears(psi: PSI,
-                                          similarity: Double = Settings.MinSimilarity,
-                                          timeout: Double = Settings.FOREVER.toDouble()) = when (psi) {
-    is String -> wait(Pattern(psi).similar(similarity.toFloat()), timeout)
-    is Pattern -> wait(Pattern(psi).similar(similarity.toFloat()), timeout)
-    is Image -> wait(Pattern(psi).similar(similarity.toFloat()), timeout)
-    else -> throw IllegalArgumentException()
-}
+fun <PSI> Region.waitFor(psi: PSI) = Waiter(this, psi)
 
 /**
  * Utility class to make common clicking actions more readable
  */
 class Clicker<out PSI>(val region: Region, val target: PSI) {
 
-    fun <PSI2> untilThisDisappears(waitTarget: PSI2) {
+    fun <PSI2> untilThisVanishes(waitTarget: PSI2) {
         while (region.has(waitTarget)) normally()
     }
 
@@ -128,7 +139,7 @@ class Clicker<out PSI>(val region: Region, val target: PSI) {
         val RNG = Random()
         repeat(times) {
             if (region == target) {
-                with (region) {
+                with(region) {
                     val dx = RNG.nextInt((w / 2.2).toInt()) * RNG.nextSign()
                     val dy = RNG.nextInt((h / 2.2).toInt()) * RNG.nextSign()
                     region.click(Location(center.x + dx, center.y + dy))

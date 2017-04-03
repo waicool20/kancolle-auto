@@ -115,7 +115,7 @@ class KCSubSwitcher(
         val number = SHIP_REGIONS.indexOf(region) + 1
         logger.info("Switching ship $number!")
         region.subRegion(245, 66, 78, 33).clickItself().normally()
-        SHIP_LIST_REGION.waitUntilThisAppears("nav/fleetcomp_shiplist_sort_arrow.png")
+        SHIP_LIST_REGION.waitFor("nav/fleetcomp_shiplist_sort_arrow.png").toAppear()
 
         logger.info("Checking shiplist sort order and moving to first page if necessary!")
         SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_sort_arrow.png").untilThisAppears("nav/fleetcomp_shiplist_sort_type.png")
