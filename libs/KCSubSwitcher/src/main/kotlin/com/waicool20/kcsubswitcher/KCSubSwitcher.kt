@@ -149,7 +149,7 @@ class KCSubSwitcher(
                             it.doesntHave(Damage.UNDER_REPAIR.pattern(DMG_SIMILARITY)) &&
                             it.doesntHave(DAMAGE_LEVELS.map { it.pattern(DMG_SIMILARITY) }.toSet())
                         } -> {
-                            logger.info("Found a free submarine! Swapping it in")
+                            logger.info("Found a free submarine! Swapping submarines!")
                             SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_ship_switch_button.png").ifItExists()
                             TimeUnit.SECONDS.sleep(2)
                             return true
