@@ -32,6 +32,13 @@ class KCSubSwitcher(
         damageLevel: Int,
         val fatigueSwitch: Boolean) {
 
+    init {
+        Settings.AutoWaitTimeout = 1f
+        Settings.MinSimilarity = 0.8
+        kcRegion.autoWaitTimeout = 1.0
+        ImagePath.add(javaClass.classLoader.getResource("images"))
+    }
+
     val logger = LoggerFactory.getLogger(javaClass)
 
     val ENABLED_SUBMARINES = Submarines.parseSubmarineList(subs)
@@ -46,13 +53,6 @@ class KCSubSwitcher(
     val SHIP_LIST_REGION = kcRegion.subRegion(351, 97, 449, 376)
 
     val fleetSubsRegions = mutableSetOf<Region>()
-
-    init {
-        Settings.AutoWaitTimeout = 1f
-        Settings.MinSimilarity = 0.8
-        kcRegion.autoWaitTimeout = 1.0
-        ImagePath.add(javaClass.classLoader.getResource("images"))
-    }
 
     fun switchSubs(): Boolean {
         // Cache the subs so we don't need to check them everytime
@@ -115,7 +115,7 @@ class KCSubSwitcher(
         val number = SHIP_REGIONS.indexOf(region) + 1
         logger.info("Switching ship $number!")
         region.subRegion(245, 66, 78, 33).clickItself().normally()
-        SHIP_LIST_REGION.wait("nav/fleetcomp_shiplist_sort_arrow.png")
+        SHIP_LIST_REGION.waitUntilThisAppears("nav/fleetcomp_shiplist_sort_arrow.png")
 
         logger.info("Checking shiplist sort order and moving to first page if necessary!")
         SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_sort_arrow.png").untilThisAppears("nav/fleetcomp_shiplist_sort_type.png")
@@ -128,7 +128,7 @@ class KCSubSwitcher(
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
                 val entries = mutableListOf<Match>()
                 ENABLED_SUBMARINES.parallelForEach({ sub ->
-                    SHIP_LIST_REGION.findAllOrEmpty(sub.pattern(0.95))
+                    SHIP_LIST_REGION.findAllOrEmpty(sub.pattern(0.97))
                             .let {
                                 if (it.isNotEmpty()) {
                                     logger.info("Found ${it.size} ${sub.subName} that should be checked")
@@ -151,7 +151,7 @@ class KCSubSwitcher(
                         } -> {
                             logger.info("Found a free submarine! Swapping it in")
                             SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_ship_switch_button.png").ifItExists()
-                            TimeUnit.SECONDS.sleep(1)
+                            TimeUnit.SECONDS.sleep(2)
                             return true
                         }
                         else -> {
