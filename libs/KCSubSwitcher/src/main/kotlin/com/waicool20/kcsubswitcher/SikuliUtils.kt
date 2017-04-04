@@ -140,8 +140,8 @@ class Clicker<out PSI>(val region: Region, val target: PSI) {
         repeat(times) {
             if (region == target) {
                 with(region) {
-                    val dx = RNG.nextInt((w / 2.2).toInt()) * RNG.nextSign()
-                    val dy = RNG.nextInt((h / 2.2).toInt()) * RNG.nextSign()
+                    val dx = RNG.nextInt((w * 0.35).toInt()) * RNG.nextSign()
+                    val dy = RNG.nextInt((h * 0.35).toInt()) * RNG.nextSign()
                     region.click(Location(center.x + dx, center.y + dy))
                 }
             } else {
