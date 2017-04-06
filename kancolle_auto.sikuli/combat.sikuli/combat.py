@@ -28,6 +28,7 @@ class Combat:
             self.submarine_switch_subs = settings['submarine_switch_subs']
             self.submarine_switch_replace_limit = settings['submarine_switch_replace_limit']
             self.submarine_switch_fatigue_switch = settings['submarine_switch_fatigue_switch']
+            self.kc_switcher = KCSubSwitcher(kc_region, settings['submarine_switch_subs'], settings['submarine_switch_replace_limit'], settings['submarine_switch_fatigue_switch'])
             self.submarine_switch_use_buckets = settings['submarine_switch_use_buckets']
         self.area_num = settings['combat_area']
         self.subarea_num = settings['combat_subarea']
@@ -48,7 +49,6 @@ class Combat:
         self.medal_stop = settings['medal_stop']
         self.last_node_push = settings['last_node_push']
         self.lbas_enabled = settings['lbas_enabled']
-        self.kc_switcher = KCSubSwitcher(kc_region, settings['submarine_switch_subs'], settings['submarine_switch_replace_limit'], settings['submarine_switch_fatigue_switch'])
         if self.lbas_enabled:
             self.lbas_groups = settings['lbas_groups']
             self.lbas_nodes = {}
