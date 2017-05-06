@@ -1,5 +1,6 @@
 package com.waicool20.kcsubswitcher
 
+import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import org.sikuli.basics.Settings
 import org.sikuli.script.*
 import org.slf4j.LoggerFactory
@@ -14,12 +15,12 @@ fun main(args: Array<String>) {
     val logger = LoggerFactory.getLogger("Main Function")
     // Test Case
     val switcher = KCSubSwitcher(
-            Screen().subRegion(80, 81, 800, 480), // Manual coordinates to kc window
+            Screen().subRegion(80, 105, 800, 480), // Manual coordinates to kc window
             listOf("ssv", "i-8", "i-19", "i-58", "i-168", "ro-500", "u-511"),
             0,
             false
     )
-    App.focus("Chromium")
+    // App.focus("Chromium")
     val time = measureTimeMillis {
         switcher.switchSubs()
     }
@@ -79,7 +80,7 @@ class KCSubSwitcher(
                     regionsToSwitch.add(region)
                 }
             }
-        })
+        }, newFixedThreadPoolContext(fleetSubsRegions.size, ""))
 
         logger.info("Checking complete! Ships ${regionsToSwitch.map { SHIP_REGIONS.indexOf(it) + 1 }.sorted()} need switching!")
         if (regionsToSwitch.map { switch(it) }.toSet().contains(false)) {
@@ -106,7 +107,7 @@ class KCSubSwitcher(
                         logger.info("Ship $number is an SSV")
                     }
                 }
-            })
+            }, newFixedThreadPoolContext(SHIP_REGIONS.size, ""))
             logger.info("Scan complete! Ships ${fleetSubsRegions.map { SHIP_REGIONS.indexOf(it) + 1 }.sorted()} were found as SS(V)")
         }
     }
@@ -135,7 +136,7 @@ class KCSubSwitcher(
                                     entries.addAll(it)
                                 }
                             }
-                })
+                }, newFixedThreadPoolContext(ENABLED_SUBMARINES.size, ""))
                 for (entry in entries) {
                     entry.clickItself().normally()
                     TimeUnit.SECONDS.sleep(1)
