@@ -176,11 +176,9 @@ class KCSubSwitcher(
             SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg$pgNumber.png").normally()
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
                 return pgNumber
-            } else {
-                logger.info("Did not find any subs in any pages")
-                return -1
             }
         }
+        logger.info("Did not find any subs in any pages")
         return -1
     }
 
