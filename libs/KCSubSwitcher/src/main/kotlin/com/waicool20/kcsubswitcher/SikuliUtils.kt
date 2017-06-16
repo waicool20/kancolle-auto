@@ -63,7 +63,7 @@ fun <PSI> Region.findAllOrEmpty(psi: PSI): List<Match> {
  */
 
 fun <PSI> Region.has(psi: PSI, similarity: Double = Settings.MinSimilarity) =
-        findOrNull(psi, similarity, 0.5) != null
+        findOrNull(psi, similarity, 0.6) != null
 
 fun <PSI> Region.has(images: Set<PSI>, similarity: Double = Settings.MinSimilarity) =
         images.parallelMap({ has(it, similarity) }).contains(true)

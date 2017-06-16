@@ -129,7 +129,7 @@ class KCSubSwitcher(
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
                 val entries = mutableListOf<Match>()
                 ENABLED_SUBMARINES.parallelForEach({ sub ->
-                    SHIP_LIST_REGION.findAllOrEmpty(sub.pattern(0.97))
+                    SHIP_LIST_REGION.findAllOrEmpty(sub.pattern(0.99))
                             .let {
                                 if (it.isNotEmpty()) {
                                     logger.info("Found ${it.size} ${sub.subName} that should be checked")
@@ -139,12 +139,11 @@ class KCSubSwitcher(
                 }, newFixedThreadPoolContext(ENABLED_SUBMARINES.size, ""))
                 for (entry in entries) {
                     entry.clickItself().normally()
-                    TimeUnit.SECONDS.sleep(1)
                     when {
                         SHIP_LIST_REGION.subRegion(278, 325, 125, 45)
                                 .doesntHave(Pattern("nav/fleetcomp_shiplist_ship_switch_button.png").exact()) -> {
                             logger.info("Can't switch with this sub type!")
-                            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg1.png").ifItExists()
+                            SHIP_LIST_REGION.subRegion(0, 0, 237, 376).clickItself().normally()
                         }
                         SHIP_LIST_REGION.subRegion(264, 62, 160, 40).let {
                             it.doesntHave(Damage.UNDER_REPAIR.pattern(DMG_SIMILARITY)) &&
@@ -152,7 +151,8 @@ class KCSubSwitcher(
                         } -> {
                             logger.info("Found a free submarine! Swapping submarines!")
                             SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_ship_switch_button.png").ifItExists()
-                            TimeUnit.SECONDS.sleep(2)
+                            kcRegion.subRegion(736, 98, 64, 32).waitFor("nav/edit_fleet_name_button.png").toAppear()
+                            TimeUnit.MILLISECONDS.sleep(250)
                             return true
                         }
                         else -> {
@@ -166,6 +166,7 @@ class KCSubSwitcher(
                 return false
             }
             logger.info("Couldn't find any subs on this page, switching to page ${pgNumber + 1}")
+            SHIP_LIST_REGION.waitFor("nav/fleetcomp_shiplist_next_button.png").toAppear()
             SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg${pgNumber + 1}.png").normally()
         }
         return false
