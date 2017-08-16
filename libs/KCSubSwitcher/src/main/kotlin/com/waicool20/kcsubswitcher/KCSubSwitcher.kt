@@ -143,11 +143,11 @@ class KCSubSwitcher(
                         SHIP_LIST_REGION.subRegion(278, 325, 125, 45)
                                 .doesntHave(Pattern("nav/fleetcomp_shiplist_ship_switch_button.png").exact()) -> {
                             logger.info("Can't switch with this sub type!")
-                            SHIP_LIST_REGION.subRegion(0, 0, 237, 376).clickItself().normally()
+                            while (SHIP_LIST_REGION.doesntHave("nav/fleetcomp_shiplist_next_button.png")) SHIP_LIST_REGION.subRegion(0, 0, 237, 376).clickItself().normally()
                         }
                         SHIP_LIST_REGION.subRegion(264, 62, 160, 40).let {
                             it.doesntHave(Damage.UNDER_REPAIR.pattern(DMG_SIMILARITY)) &&
-                            it.doesntHave(DAMAGE_LEVELS.map { it.pattern(DMG_SIMILARITY) }.toSet())
+                                    it.doesntHave(DAMAGE_LEVELS.map { it.pattern(DMG_SIMILARITY) }.toSet())
                         } -> {
                             logger.info("Found a free submarine! Swapping submarines!")
                             SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_ship_switch_button.png").ifItExists()
@@ -166,7 +166,6 @@ class KCSubSwitcher(
                 return false
             }
             logger.info("Couldn't find any subs on this page, switching to page ${pgNumber + 1}")
-            SHIP_LIST_REGION.waitFor("nav/fleetcomp_shiplist_next_button.png").toAppear()
             SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg${pgNumber + 1}.png").normally()
         }
         return false
