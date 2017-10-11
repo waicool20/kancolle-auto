@@ -35,13 +35,13 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.14'
 
-    compile ('com.sikulix:sikulixapi:1.1.1-SNAPSHOT') {
+    compile ('com.sikulix:sikulixapi:1.1.2-SNAPSHOT') {
         exclude group: 'com.sikulix'
         exclude module: 'jadb'
     }
-    compile group: 'com.sikulix', name: 'sikulixlibslux', version: '1.1.1-SNAPSHOT'
-    compile group: 'com.sikulix', name: 'sikulixlibsmac', version: '1.1.1-SNAPSHOT'
-    compile group: 'com.sikulix', name: 'sikulixlibswin', version: '1.1.1-SNAPSHOT'
+    compile group: 'com.sikulix', name: 'sikulixlibslux', version: '1.1.2-SNAPSHOT'
+    compile group: 'com.sikulix', name: 'sikulixlibsmac', version: '1.1.2-SNAPSHOT'
+    compile group: 'com.sikulix', name: 'sikulixlibswin', version: '1.1.2-SNAPSHOT'
 
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.8'
 
@@ -52,7 +52,7 @@ shadowJar {
     classifier = null
     version = null
     dependencies {
-        exclude(dependency('com.sikulix::1.1.1-SNAPSHOT'))
+        exclude(dependency('com.sikulix::1.1.2-SNAPSHOT'))
     }
 }
 
