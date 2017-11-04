@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
-val CLASS_SIMILARITY = 0.67
+val CLASS_SIMILARITY = 0.77
 val DMG_SIMILARITY = 0.66
 val FATIGUE_SIMILARITY = 0.96
 
@@ -95,14 +95,16 @@ class KCSubSwitcher(
     private fun fillFleetCache() {
         if (fleetSubsRegions.isEmpty()) {
             logger.info("Current ship cache is empty, scanning for SS and SSVs!")
+            val hasSS = ENABLED_SUBMARINES.any { !it.isSSV }
+            val hasSSV = ENABLED_SUBMARINES.any { it.isSSV }
             SHIP_REGIONS.parallelForEach({ region ->
                 val number = SHIP_REGIONS.indexOf(region) + 1
                 when {
-                    region.has("ship_class_ss.png", similarity = CLASS_SIMILARITY) -> {
+                    hasSS && region.has("ship_class_ss.png", similarity = CLASS_SIMILARITY) -> {
                         fleetSubsRegions.add(region)
                         logger.info("Ship $number is an SS")
                     }
-                    region.has("ship_class_ssv.png", similarity = CLASS_SIMILARITY) -> {
+                    hasSSV && region.has("ship_class_ssv.png", similarity = CLASS_SIMILARITY) -> {
                         fleetSubsRegions.add(region)
                         logger.info("Ship $number is an SSV")
                     }
