@@ -63,7 +63,7 @@ class KCSubSwitcher(
         logger.info("Checking for ships that need switching!")
 
         fleetSubsRegions.parallelForEach({ region ->
-            val statusRegion = region.subRegion(161, 10, 164, 44)
+            val statusRegion = region.subRegion(161, 10, 174, 44)
             val number = SHIP_REGIONS.indexOf(region) + 1
             logger.info("Checking Ship $number")
             when {
