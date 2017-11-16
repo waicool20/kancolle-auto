@@ -40,7 +40,10 @@ enum class Submarines(val subName: String, val isSSV: Boolean) {
     I_401("i-401", true),
     MARUYU("maruyu", false),
     RO_500("ro-500", false),
-    U_511("u-511", false);
+    U_511("u-511", false),
+    LUIGI("Luigi", false),
+    UIT_25("UIT-25", false),
+    I_504("I-504", false);
 
     fun image() = "subs/fleetcomp_shiplist_submarine_$subName.png"
 
@@ -54,7 +57,7 @@ enum class Submarines(val subName: String, val isSSV: Boolean) {
                     sub.equals("all", true) -> return Submarines.values().asList().toSet()
                     sub.equals("ss", true) -> enabledSubs.addAll(Submarines.values().filter { !it.isSSV })
                     sub.equals("ssv", true) -> enabledSubs.addAll(Submarines.values().filter { it.isSSV })
-                    else -> Submarines.values().find { it.subName == sub }?.let { enabledSubs.add(it) }
+                    else -> Submarines.values().find { it.subName.equals(sub, true) }?.let { enabledSubs.add(it) }
                 }
             }
             return enabledSubs
