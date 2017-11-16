@@ -41,9 +41,9 @@ enum class Submarines(val subName: String, val isSSV: Boolean) {
     MARUYU("maruyu", false),
     RO_500("ro-500", false),
     U_511("u-511", false),
-    LUIGI("Luigi", false),
-    UIT_25("UIT-25", false),
-    I_504("I-504", false);
+    LUIGI("luigi", false),
+    UIT_25("uit-25", false),
+    I_504("i-504", false);
 
     fun image() = "subs/fleetcomp_shiplist_submarine_$subName.png"
 
