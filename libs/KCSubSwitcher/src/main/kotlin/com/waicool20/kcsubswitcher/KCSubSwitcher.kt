@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
             Screen().subRegion(80, 105, 800, 480), // Manual coordinates to kc window
             listOf("ssv", "i-8", "i-19", "i-58", "i-168", "ro-500", "u-511"),
             0,
-            false
+            true
     )
     // App.focus("Chromium")
     val time = measureTimeMillis {
@@ -129,37 +129,45 @@ class KCSubSwitcher(
         for (pgNumber in startingPage..10) {
             logger.info("Starting search at page $pgNumber")
             if (SHIP_LIST_REGION.has("subs/fleetcomp_shiplist_submarine.png")) {
-                val entries = mutableListOf<Match>()
+                val entries = mutableMapOf<Submarines, MutableList<Match>>()
                 ENABLED_SUBMARINES.parallelForEach({ sub ->
                     SHIP_LIST_REGION.findAllOrEmpty(sub.pattern(0.99))
                             .let {
                                 if (it.isNotEmpty()) {
                                     logger.info("Found ${it.size} ${sub.subName} that should be checked")
-                                    entries.addAll(it)
+                                    entries[sub]?.addAll(it.toMutableList()) ?: entries.put(sub, it.toMutableList())
                                 }
                             }
                 }, newFixedThreadPoolContext(ENABLED_SUBMARINES.size, ""))
-                for (entry in entries) {
-                    entry.clickItself().normally()
-                    when {
-                        SHIP_LIST_REGION.subRegion(278, 325, 125, 45)
-                                .doesntHave(Pattern("nav/fleetcomp_shiplist_ship_switch_button.png").exact()) -> {
-                            logger.info("Can't switch with this sub type!")
-                            while (SHIP_LIST_REGION.doesntHave("nav/fleetcomp_shiplist_next_button.png")) SHIP_LIST_REGION.subRegion(0, 0, 237, 376).clickItself().normally()
-                        }
-                        SHIP_LIST_REGION.subRegion(264, 62, 160, 40).let {
-                            it.doesntHave(Damage.UNDER_REPAIR.pattern(DMG_SIMILARITY)) &&
-                                    it.doesntHave(DAMAGE_LEVELS.map { it.pattern(DMG_SIMILARITY) }.toSet())
-                        } -> {
-                            logger.info("Found a free submarine! Swapping submarines!")
-                            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_ship_switch_button.png").ifItExists()
-                            kcRegion.subRegion(736, 98, 64, 32).waitFor("nav/edit_fleet_name_button.png").toAppear()
-                            TimeUnit.MILLISECONDS.sleep(250)
-                            return true
-                        }
-                        else -> {
-                            logger.info("Submarine not available, moving on!")
-                            SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg1.png").ifItExists()
+
+
+                SubEntryLoop@ for (subEntry in entries) {
+                    for (foundEntry in subEntry.value) {
+                        foundEntry.clickItself().normally()
+                        when {
+                            SHIP_LIST_REGION.subRegion(278, 325, 125, 45)
+                                    .doesntHave(Pattern("nav/fleetcomp_shiplist_ship_switch_button.png").exact()) -> {
+                                logger.info("Can't switch with ${subEntry.key.subName}, skipping them all!")
+                                while (SHIP_LIST_REGION.doesntHave("nav/fleetcomp_shiplist_next_button.png")) {
+                                    SHIP_LIST_REGION.subRegion(0, 0, 237, 376).clickItself().normally()
+                                }
+                                continue@SubEntryLoop
+                            }
+                            SHIP_LIST_REGION.subRegion(264, 62, 169, 40).let {
+                                it.doesntHave(Damage.UNDER_REPAIR.pattern(DMG_SIMILARITY)) &&
+                                        it.doesntHave(DAMAGE_LEVELS.map { it.pattern(DMG_SIMILARITY) }.toSet()) &&
+                                        it.doesntHave(Fatigued.values().map(Fatigued::image).toSet())
+                            } -> {
+                                logger.info("Found a free submarine! Swapping submarines!")
+                                SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_ship_switch_button.png").ifItExists()
+                                kcRegion.subRegion(736, 98, 64, 32).waitFor("nav/edit_fleet_name_button.png").toAppear()
+                                TimeUnit.MILLISECONDS.sleep(250)
+                                return true
+                            }
+                            else -> {
+                                logger.info("Submarine not available, moving on!")
+                                SHIP_LIST_REGION.clickOn("nav/fleetcomp_shiplist_pg1.png").ifItExists()
+                            }
                         }
                     }
                 }
