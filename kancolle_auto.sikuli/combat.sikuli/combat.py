@@ -363,7 +363,8 @@ class Combat:
                 loop_pre_combat_stop = True
                 break
             # If formation select, select formation based on user config
-            elif nodes_run < len(self.formations) and check_and_click(global_regions['formation_%s' % self.formations[nodes_run]], 'formation_%s.png' % self.formations[nodes_run]):
+            # elif nodes_run < len(self.formations) and check_and_click(global_regions['formation_%s' % self.formations[nodes_run]], 'formation_%s.png' % self.formations[nodes_run]):
+            elif nodes_run < len(self.formations) and check_and_click(global_regions['game'], Pattern('formation_%s.png' % self.formations[nodes_run]).exact()):
                 # Now check for night battle prompt or post-battle report
                 log_msg("Selecting fleet formation!")
                 sleep(8)
