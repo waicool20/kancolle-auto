@@ -83,10 +83,10 @@ def get_config(settings, sleep_cycle):
             # Disable PvP if combined fleet is enabled
             settings['pvp_enabled'] = False
             settings_check_valid_formations = ['combinedfleet_1', 'combinedfleet_2', 'combinedfleet_3', 'combinedfleet_4']
-            settings_check_valid_formations += ['line_ahead', 'double_line', 'diamond', 'echelon', 'line_abreast', ]
+            settings_check_valid_formations += ['line_ahead', 'double_line', 'diamond', 'echelon', 'line_abreast', 'alert']
             settings_check_filler_formation = 'combinedfleet_4'
         else:
-            settings_check_valid_formations = ['line_ahead', 'double_line', 'diamond', 'echelon', 'line_abreast', ]
+            settings_check_valid_formations = ['line_ahead', 'double_line', 'diamond', 'echelon', 'line_abreast', 'alert']
             settings_check_filler_formation = 'line_ahead'
         settings['nodes'] = config.getint('Combat', 'Nodes')
         settings['node_selects'] = config.get('Combat', 'NodeSelects').replace(' ', '').split(',')
