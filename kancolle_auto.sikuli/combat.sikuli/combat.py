@@ -794,7 +794,8 @@ class PvP:
         log_msg("Beginning PvP sortie!")
         rejigger_mouse(self.kc_region, 50, 350, 0, 100)
         sleep(2)
-        wait_and_click(global_regions[formation], '%s.png' % formation, 30)
+        #wait_and_click(global_regions[formation], '%s.png' % formation, 30)
+        check_and_click(global_regions['game'], Pattern('formation_%s.png' % formation).exact())
         rejigger_mouse(self.kc_region, 50, 750, 0, 100)
         while not (global_regions['next'].exists('next.png') or
                    self.kc_region.exists('combat_nb_fight.png')):
